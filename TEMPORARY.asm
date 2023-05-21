@@ -1,61 +1,86 @@
 section .data
-    vowels db 'aeiou', 0 ; vowels to check
+    ; declare global vars here
 
 section .text
-    global reverse_vowels
-    extern strchr
+global reverse_vowels
 
 ;; void reverse_vowels(char *string)
+; Search for all the vowels in the string `string' and display them
+; in reverse order. The consonants remain unchanged.
+; Modification will be made in-place
 reverse_vowels:
-    ;; Save registers
-    pusha
+	push ebp
+	mov ebp, esp
+	pusha
+    push esi        ; Preserve the value of esi on the stack
+    push edi        ; Preserve the value of edi on the stack
 
-    ;; First pass: find vowels and push onto stack
-    mov eax, [esp+36] ; load address of string
-first_pass:
-    push eax ; save current pointer
-    push byte [eax] ; push character onto stack
-    push 4 ; strchr expects a int (4 bytes) not a char
-    pop ecx ; get char into ecx
-    add esp, 4 ; correct stack after push
-    push eax ; push pointer for strchr
-    push vowels ; push vowels for strchr
-    call strchr
-    add esp, 8 ; correct stack after call
-    test eax, eax ; check if strchr found a vowel
-    jz not_a_vowel ; if not a vowel, skip
-    push ecx ; if it's a vowel, push it onto the stack
-not_a_vowel:
-    pop eax ; restore pointer
-    inc eax ; next character
-    cmp byte [eax], 0 ; check for end of string
-    jne first_pass ; if not end of string, continue
+    mov esi, eax    ; eax contains the address of the string
+    mov edi, esi    ; Set edi to the same address as esi
 
-    ;; Second pass: replace vowels with those from the stack
-    mov eax, [esp+36] ; load address of string
-second_pass:
-    push eax ; save current pointer
-    push byte [eax] ; push character onto stack
-    push 4 ; strchr expects a int (4 bytes) not a char
-    pop ecx ; get char into ecx
-    add esp, 4 ; correct stack after push
-    push eax ; push pointer for strchr
-    push vowels ; push vowels for strchr
-    call strchr
-    add esp, 8 ; correct stack after call
-    test eax, eax ; check if strchr found a vowel
-    jz not_a_vowel_second_pass ; if not a vowel, skip
-    pop eax ; pop vowel from stack
-    push byte [esp] ; save original character
-    pop byte [esp+4] ; replace vowel in string
-    jmp continue_second_pass
-not_a_vowel_second_pass:
-    pop eax ; restore pointer
-continue_second_pass:
-    inc eax ; next character
-    cmp byte [eax], 0 ; check for end of string
-    jne second_pass ; if not end of string, continue
+    xor ecx, ecx    ; Clear ecx register (used as a counter)
 
-    ;; Restore registers and return
-    popa
+loop_start:
+    cmp esi, edi    ; Compare esi and edi
+    jge loop_end    ; Jump to loop_end if esi >= edi
+
+    mov al, byte [esi]     ; Load character at esi into al
+    cmp al, 'a'            ; Compare al with 'a' (lower bound)
+    jl next_iteration      ; Jump to next_iteration if al < 'a'
+
+    cmp al, 'z'            ; Compare al with 'z' (upper bound)
+    jg next_iteration      ; Jump to next_iteration if al > 'z'
+
+    cmp al, 'a'            ; Compare al with 'a' (lower bound)
+    je is_vowel            ; Jump to is_vowel if al == 'a'
+
+    cmp al, 'e'            ; Compare al with 'e'
+    je is_vowel            ; Jump to is_vowel if al == 'e'
+
+    cmp al, 'i'            ; Compare al with 'i'
+    je is_vowel            ; Jump to is_vowel if al == 'i'
+
+    cmp al, 'o'            ; Compare al with 'o'
+    je is_vowel            ; Jump to is_vowel if al == 'o'
+
+    cmp al, 'u'            ; Compare al with 'u'
+    jne next_iteration     ; Jump to next_iteration if al != 'u'
+
+is_vowel:
+    mov bl, byte [edi]     ; Load character at edi into bl
+    cmp bl, 'a'            ; Compare bl with 'a' (lower bound)
+    jl next_iteration      ; Jump to next_iteration if bl < 'a'
+
+    cmp bl, 'z'            ; Compare bl with 'z' (upper bound)
+    jg next_iteration      ; Jump to next_iteration if bl > 'z'
+
+    cmp bl, 'a'            ; Compare bl with 'a' (lower bound)
+    je perform_swap        ; Jump to perform_swap if bl == 'a'
+
+    cmp bl, 'e'            ; Compare bl with 'e'
+    je perform_swap        ; Jump to perform_swap if bl == 'e'
+
+    cmp bl, 'i'            ; Compare bl with 'i'
+    je perform_swap        ; Jump to perform_swap if bl == 'i'
+
+    cmp bl, 'o'            ; Compare bl with 'o'
+    je perform_swap        ; Jump to perform_swap if bl == 'o'
+
+    cmp bl, 'u'            ; Compare bl with 'u'
+    jne next_iteration     ; Jump to next_iteration if bl != 'u'
+
+perform_swap:
+    xchg byte [esi], byte [edi]   ; Swap the characters at esi and edi
+
+next_iteration:
+    inc esi               ; Increment esi
+    dec edi               ; Decrement edi
+    jmp loop_start        ; Jump back to loop_start
+
+loop_end:
+    pop edi        ; Restore the value of edi from the stack
+    pop esi        ; Restore the value of esi from the stack
+
+	popa
+	leave
     ret

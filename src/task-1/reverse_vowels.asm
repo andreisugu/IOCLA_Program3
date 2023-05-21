@@ -1,86 +1,102 @@
+%include "../include/io.mac"
+
 section .data
-    ; declare global vars here
+	; declare global vars here
 
+	; Domnul Sugubete Andrei, in Assembly (NASM x86) puteti folosi cu incredere
+	; urmatorii registri: eax, ebx, ecx, edx, esi, edi
+
+	; Ne auzim pentru al doilea task la ora 21:00. Mult spor si pauza placuta.a
+
+	; DE ADAUGAT COMENTARII SCHIMBA CHESTII ETC
 section .text
-global reverse_vowels
-
-;; void reverse_vowels(char *string)
-; Search for all the vowels in the string `string' and display them
-; in reverse order. The consonants remain unchanged.
-; Modification will be made in-place
+	global reverse_vowels
+	extern printf
+	extern strchr
+;;	void reverse_vowels(char *string)
+;	Cauta toate vocalele din string-ul `string` si afiseaza-le
+;	in ordine inversa. Consoanele raman nemodificate.
+;	Modificare se va face in-place
 reverse_vowels:
+	; shenanigans
 	push ebp
-	mov ebp, esp
-	pusha
-    push esi        ; Preserve the value of esi on the stack
-    push edi        ; Preserve the value of edi on the stack
+	push esp
+	pop ebp
+    pusha
 
-    mov esi, eax    ; eax contains the address of the string
-    mov edi, esi    ; Set edi to the same address as esi
+	push dword[ebp + 8]
+	pop eax
 
-    xor ecx, ecx    ; Clear ecx register (used as a counter)
+initial_traversal: ; poate refacem for ul
+	cmp byte[eax], 0x0 ;schimba maybe cu 0
+	je end_initial_traversal
 
-loop_start:
-    cmp esi, edi    ; Compare esi and edi
-    jge loop_end    ; Jump to loop_end if esi >= edi
+	push dword[eax]
+	pop edx
 
-    mov al, byte [esi]     ; Load character at esi into al
-    cmp al, 'a'            ; Compare al with 'a' (lower bound)
-    jl next_iteration      ; Jump to next_iteration if al < 'a'
+	cmp dl, 'a' ; poate cu edx
+	je vowel
+	cmp dl, 'e'
+	je vowel
+	cmp dl, 'i'
+	je vowel
+	cmp dl, 'o'
+	je vowel
+	cmp dl, 'u'
+	je vowel
 
-    cmp al, 'z'            ; Compare al with 'z' (upper bound)
-    jg next_iteration      ; Jump to next_iteration if al > 'z'
+	inc eax
+	jmp initial_traversal
 
-    cmp al, 'a'            ; Compare al with 'a' (lower bound)
-    je is_vowel            ; Jump to is_vowel if al == 'a'
+vowel:
+	push dword[eax]
+	inc eax
+	jmp initial_traversal
 
-    cmp al, 'e'            ; Compare al with 'e'
-    je is_vowel            ; Jump to is_vowel if al == 'e'
+end_initial_traversal:
 
-    cmp al, 'i'            ; Compare al with 'i'
-    je is_vowel            ; Jump to is_vowel if al == 'i'
+	push dword[ebp + 8]
+	pop eax
 
-    cmp al, 'o'            ; Compare al with 'o'
-    je is_vowel            ; Jump to is_vowel if al == 'o'
+second_traversal:
+	cmp byte[eax], 0x0
+	je end_second_traversal
 
-    cmp al, 'u'            ; Compare al with 'u'
-    jne next_iteration     ; Jump to next_iteration if al != 'u'
+	push dword[eax]
+	pop edx
 
-is_vowel:
-    mov bl, byte [edi]     ; Load character at edi into bl
-    cmp bl, 'a'            ; Compare bl with 'a' (lower bound)
-    jl next_iteration      ; Jump to next_iteration if bl < 'a'
+	cmp dl, 'a'
+	je found_vowel
+	cmp dl, 'e'
+	je found_vowel
+	cmp dl, 'i'
+	je found_vowel
+	cmp dl, 'o'
+	je found_vowel
+	cmp dl, 'u'
+	je found_vowel
 
-    cmp bl, 'z'            ; Compare bl with 'z' (upper bound)
-    jg next_iteration      ; Jump to next_iteration if bl > 'z'
+equal:
+	inc eax
+	jmp second_traversal
 
-    cmp bl, 'a'            ; Compare bl with 'a' (lower bound)
-    je perform_swap        ; Jump to perform_swap if bl == 'a'
+found_vowel:
+	push dword[eax]
+	pop edx
+	pop ecx
 
-    cmp bl, 'e'            ; Compare bl with 'e'
-    je perform_swap        ; Jump to perform_swap if bl == 'e'
+	cmp edx, ecx
 
-    cmp bl, 'i'            ; Compare bl with 'i'
-    je perform_swap        ; Jump to perform_swap if bl == 'i'
+	sub ecx, edx
+	add byte[eax], cl
+	jmp equal
 
-    cmp bl, 'o'            ; Compare bl with 'o'
-    je perform_swap        ; Jump to perform_swap if bl == 'o'
-
-    cmp bl, 'u'            ; Compare bl with 'u'
-    jne next_iteration     ; Jump to next_iteration if bl != 'u'
-
-perform_swap:
-    xchg esi, edi   ; Swap the characters at esi and edi
-
-next_iteration:
-    inc esi               ; Increment esi
-    dec edi               ; Decrement edi
-    jmp loop_start        ; Jump back to loop_start
-
-loop_end:
-    pop edi        ; Restore the value of edi from the stack
-    pop esi        ; Restore the value of esi from the stack
-
+end_second_traversal:
+	; reset ebp
 	popa
-	leave
-    ret
+	push ebp
+	pop esp
+	pop ebp
+    ret  		; echivalent cu pop esp
+
+
