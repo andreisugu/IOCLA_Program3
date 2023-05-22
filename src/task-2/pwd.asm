@@ -1,4 +1,3 @@
-%include "../include/io.mac"
 section .data
 	back db "..", 0
 	curr db ".", 0
@@ -22,11 +21,8 @@ pwd:
 	mov ebx, dword[ebp + 12] 	; n
 	mov edx, dword[ebp + 16] 	; output
 
-
-; ACTIVE CODE
 	; we go through each directory
 	; for each directory, we add to output "/" and the name of the directory
-	; we will use ecx to go through the directories
 	xor ecx, ecx
 first_loop:
 	; if we finished iterating through the directories, exit
@@ -34,7 +30,7 @@ first_loop:
 	je end_first_loop
 	
 	; we check for "." and ".."
-	; if we find them, we modify the directories array to reflect the changes
+	; if we find them, we modify accordingly
 	; save ebx
 	push ebx
 	xor ebx, ebx
@@ -81,13 +77,13 @@ action_decider:
 	jmp curr_dir
 
 curr_dir:
-	; dont do anything
+	; because its the current dir, we do nothing
 	; restore ebx
 	pop ebx
 	jmp continue_first_loop
 
 back_dir:
-	; because its the parent dir, we move the entire eax array two positions to the left
+	; because its the parent dir, remove the last directory from output
 	; restore ebx
 	pop ebx
 	jmp move_left
@@ -116,14 +112,9 @@ end_move_left:
  
 	; we finished iterating through the directories
 end_first_loop:
-; END ACTIVE CODE
 	; add a final "/"
 	mov byte[edx], '/'
 	inc edx
-
-	;mov ebx, [eax + 16] ; alegem propozitia (iteratii de 4)
-	;mov cl, byte[ebx + 2]  ; copiem caracterul din propozitie pe care il dorim (iteratii de 4)
-	;mov byte[edx], cl  ; introducem caracterul in rezultat
 
 	popa
 	leave
