@@ -49,6 +49,8 @@ compare_func:
     ; jg first_word_is_longer
     ; jl second_word_is_longer
 
+; PENTRU ANDREI DIN VIITOR: RECOMAND SA FACI MANUAL FIINDCA NU MERGE DELOC STRLEN SI PIER DE NERVI IAR :)
+
 first_word_is_longer:
     mov eax, 1
     jmp end_cmp
