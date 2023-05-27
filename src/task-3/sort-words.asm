@@ -9,61 +9,65 @@ section .text
     extern strcmp
     extern strlen
     extern qsort
-    extern printf
 
 section .data
     delim db ' .,', 10, 0 ; delimiter
-    rasp dd 1
+    rasp dd 0
     first_word dd 0
     second_word dd 0
     format db "%s ", 0
 
+; compare_func(const void *a, const void *b)
+;  functia de comparare pentru qsort
+;  returneaza 0 daca a == b
+;  returneaza < 0 daca a < b
+;  returneaza > 0 daca a > b
+;  a si b sunt pointeri la cuvinte
+compare_func:
+    enter 0, 0
+    pusha
+
+    ; Get the two string pointers
+    mov eax, [ebp + 8]  ; first string pointer
+    mov ebx, [ebp + 12] ; second string pointer
+
+    ; Point esi to the first string and edi to the second
+    mov esi, [eax]
+    mov edi, [ebx]
+
+    ; Measure the length of the first string
+    xor eax, eax
+    xor ecx, ecx
+    not ecx
+    cld
+    repne scasb
+    not ecx
+    dec ecx
+    mov edx, ecx
+
+    ; Measure the length of the second string
+    xor eax, eax
+    xor ecx, ecx
+    not ecx
+    mov edi, [ebx]
+    cld
+    repne scasb
+    not ecx
+    dec ecx
+
+    ; Compare the lengths and return the difference
+    sub edx, ecx
+    mov dword[rasp], edx
+
+    popa
+    mov eax, dword[rasp]
+    mov edx, dword[rasp]
+    leave
+    ret
 
 ;; sort(char **words, int number_of_words, int size)
 ;  functia va trebui sa apeleze qsort pentru soratrea cuvintelor 
 ;  dupa lungime si apoi lexicografix
-compare_func:
-    enter 0, 0
-    
-    ;mov ebx, [esp + 4]  ; Load pointer to ebx (first word)
-    ;mov ecx, [esp + 8]  ; Load pointer to ecx (second word)
-
-    ; Get the lenghts of the words
-    ; FIRST WORD
-    pusha
-    mov ebx, [esp + 4]
-    xor eax, eax
-    push ebx
-    call strlen
-    add esp, 4
-
-    mov dword[first_word], eax
-
-    popa
-
-    ; SECOND WORD
-    pusha    
-    mov ebx, [esp + 4]
-    xor eax, eax
-    push ebx
-    call strlen
-    add esp, 4
-
-    mov dword[second_word], eax
-    popa
-
-    pusha
-    ; compare sizes
-    mov eax, dword[first_word]
-    sub eax, dword[second_word]
-    mov dword[rasp], eax
-
-end_cmp:
-    popa
-    mov eax, dword[rasp]
-    leave
-    ret
-
 sort:
     enter 0, 0
     pusha
@@ -73,7 +77,7 @@ sort:
 	mov edx, dword[ebp + 16] 	; int size
 
     mov ecx, compare_func
-    push ecx
+    push compare_func
     push edx
     push ebx
     push eax
