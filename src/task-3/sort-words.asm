@@ -2,6 +2,13 @@ global get_words
 global compare_func
 global sort
 
+section .data
+    delim db ' .,', 10, 0 ; delimiter
+    rasp dd 0
+    first_word dd 0
+    second_word dd 0
+    format db "%s ", 0
+
 section .text
     global compare_func
     extern strtok
@@ -9,13 +16,6 @@ section .text
     extern strcmp
     extern strlen
     extern qsort
-
-section .data
-    delim db ' .,', 10, 0 ; delimiter
-    rasp dd 0
-    first_word dd 0
-    second_word dd 0
-    format db "%s ", 0
 
 ; compare_func(const void *a, const void *b)
 ;  functia de comparare pentru qsort
@@ -28,8 +28,30 @@ compare_func:
 	mov ebp, esp
 	pusha
     
+    mov ebx, [ebp + 8] 	    ; first word
+    mov edx, [ebp + 12] 	; second word
     
+    ; we will compare the length of the words manually
+    xor ecx, ecx
+length_loop:
+    xor eax, eax
+    mov al, [ebx + ecx]
+    cmp al, 0
+    je end_first_worse
+    xor eax, eax
+    mov al, [edx + ecx]
+    cmp al, 0
+    je end_second_worse
+    inc ecx
+    jmp length_loop
+end_first_worse:
+    mov dword[rasp], 1
+    jmp end_length_loop
+end_second_worse:
+    mov dword[rasp], 0
+end_length_loop:
     popa
+    mov eax, dword[rasp]
     mov esp, ebp
     pop ebp
     ret
@@ -46,7 +68,7 @@ sort:
 	mov edx, dword[ebp + 16] 	; int size
 
     mov ecx, compare_func
-    push compare_func
+    push ecx
     push edx
     push ebx
     push eax
