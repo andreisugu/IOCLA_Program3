@@ -24,45 +24,14 @@ section .data
 ;  returneaza > 0 daca a > b
 ;  a si b sunt pointeri la cuvinte
 compare_func:
-    enter 0, 0
-    pusha
-
-    ; Get the two string pointers
-    mov eax, [ebp + 8]  ; first string pointer
-    mov ebx, [ebp + 12] ; second string pointer
-
-    ; Point esi to the first string and edi to the second
-    mov esi, [eax]
-    mov edi, [ebx]
-
-    ; Measure the length of the first string
-    xor eax, eax
-    xor ecx, ecx
-    not ecx
-    cld
-    repne scasb
-    not ecx
-    dec ecx
-    mov edx, ecx
-
-    ; Measure the length of the second string
-    xor eax, eax
-    xor ecx, ecx
-    not ecx
-    mov edi, [ebx]
-    cld
-    repne scasb
-    not ecx
-    dec ecx
-
-    ; Compare the lengths and return the difference
-    sub edx, ecx
-    mov dword[rasp], edx
-
+    push ebp
+	mov ebp, esp
+	pusha
+    
+    
     popa
-    mov eax, dword[rasp]
-    mov edx, dword[rasp]
-    leave
+    mov esp, ebp
+    pop ebp
     ret
 
 ;; sort(char **words, int number_of_words, int size)
