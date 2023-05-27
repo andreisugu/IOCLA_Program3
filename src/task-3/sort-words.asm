@@ -5,13 +5,15 @@ global sort
 section .text
     global compare_func
     extern strtok
+    extern strcpy
     extern strcmp
     extern strlen
     extern qsort
     extern printf
 
 section .data
-    delim db 'n .,', 0 ; delimiter
+    delim db ' .,', 10, 0 ; delimiter
+    rasp dd 1
     first_word dd 0
     second_word dd 0
     format db "%s ", 0
@@ -23,43 +25,42 @@ section .data
 compare_func:
     enter 0, 0
     
-    mov ebx, [esp + 4]  ; Load pointer to ebx (first word)
-    mov ecx, [esp + 8]  ; Load pointer to ecx (second word)
+    ;mov ebx, [esp + 4]  ; Load pointer to ebx (first word)
+    ;mov ecx, [esp + 8]  ; Load pointer to ecx (second word)
 
     ; Get the lenghts of the words
-    ; xor eax, eax
-    ; push ebx
-    ; call strlen
-    ; add esp, 4
+    ; FIRST WORD
+    pusha
+    mov ebx, [esp + 4]
+    xor eax, eax
+    push ebx
+    call strlen
+    add esp, 4
 
-    ; mov dword[first_word], eax
-    
-    ; xor eax, eax
-    ; push ecx
-    ; call strlen
-    ; add esp, 4
+    mov dword[first_word], eax
 
-    ; mov dword[second_word], eax
+    popa
 
-    ; ;  Compare the lengths
-    ; mov eax, dword[first_word]
-    ; mov ecx, dword[second_word]
-    ; cmp eax, ecx
-    ; je compare_lexicographically
-    ; jg first_word_is_longer
-    ; jl second_word_is_longer
+    ; SECOND WORD
+    pusha    
+    mov ebx, [esp + 4]
+    xor eax, eax
+    push ebx
+    call strlen
+    add esp, 4
 
-; PENTRU ANDREI DIN VIITOR: RECOMAND SA FACI MANUAL FIINDCA NU MERGE DELOC STRLEN SI PIER DE NERVI IAR :)
+    mov dword[second_word], eax
+    popa
 
-first_word_is_longer:
-    mov eax, 1
-    jmp end_cmp
-second_word_is_longer:
-    mov eax, 0
-    jmp end_cmp
-compare_lexicographically:
+    pusha
+    ; compare sizes
+    mov eax, dword[first_word]
+    sub eax, dword[second_word]
+    mov dword[rasp], eax
 
 end_cmp:
+    popa
+    mov eax, dword[rasp]
     leave
     ret
 
@@ -93,8 +94,6 @@ get_words:
     enter 0, 0
     pusha
 
-    mov byte[delim], 10
-
     mov eax, dword[ebp + 8] 	; char *s
 	mov ebx, dword[ebp + 12] 	; char **words
 	mov edx, dword[ebp + 16] 	; int number_of_words
@@ -126,21 +125,11 @@ add_word:
 
     ; we will have to copy the word from eax to ebx
     ; we will use a loop
-second_loop:
-    xor ecx, ecx
-    mov cl, byte[eax]
-    cmp cl, 0
-    je end_second_loop
+    push eax
+    push ebx
+    call strcpy
+    add esp, 8
 
-    xor ecx, ecx
-    mov cl, byte[eax]
-    mov byte[ebx], cl
-
-    inc eax
-    inc ebx
-    jmp second_loop
-end_second_loop:
-    ; restore ebx and go to next word pointer
     pop ebx
     add ebx, 4
 next_word:
@@ -150,8 +139,6 @@ next_word:
     add esp, 8
     jmp first_loop
 end_first_loop:
-
-
     popa
     leave
     ret
